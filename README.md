@@ -38,6 +38,19 @@ OPTIONS:
 
 3. Execute the program and you're done
 
+### mysqlmigrate schema
+
+This table will be created if it does not already exist.
+
+```
+CREATE TABLE IF NOT EXISTS `mysqlmigrate` (
+    `id` CHAR(100) NOT NULL,
+    `file` CHAR(50) NOT NULL,
+    `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`, `file`)
+) ENGINE=InnoDB;
+```
+
 ## Other Notes
 
 * This script will not escape file names, so don't be an idiot and use crappy

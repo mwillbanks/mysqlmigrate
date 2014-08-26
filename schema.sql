@@ -1,4 +1,6 @@
 CREATE TABLE IF NOT EXISTS `mysqlmigrate` (
     `id` CHAR(100) NOT NULL,
-    PRIMARY KEY (`id`)
+    `file` CHAR(50) NOT NULL,
+    `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`, `file`)
 ) ENGINE=InnoDB;

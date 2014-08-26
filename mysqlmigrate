@@ -43,6 +43,8 @@ do
    esac
 done
 
+BASEOUT=$( basename $OUT )
+
 ## Ensure empty file
 if [ -f $OUT ]
 then
@@ -76,7 +78,7 @@ do
     echo "/* $i */" >> $OUT
     echo "START TRANSACTION;" >> $OUT
     cat "$DIR/$i" >> $OUT
-    echo "INSERT INTO mysqlmigrate VALUES ('$i');" >> $OUT
+    echo "INSERT INTO mysqlmigrate VALUES ('$i', '$BASEOUT', NOW());" >> $OUT
     echo "COMMIT;" >> $OUT
     echo "" >> $OUT
 done
@@ -90,4 +92,5 @@ then
     echo "[OK]"
 else
     echo "[FAIL]"
+    exit 1
 fi
