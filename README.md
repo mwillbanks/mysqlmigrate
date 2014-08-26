@@ -37,3 +37,11 @@ OPTIONS:
 2. Create a migrations folder, add .sql files into it
 
 3. Execute the program and you're done
+
+## Other Notes
+
+* This script will not escape file names, so don't be an idiot and use crappy
+  files names with null bytes, single quotes, etc.
+* Each changeset is wrapped into a transaction
+* This script literally attempts to do the least amount possible
+* Once a SQL script is run, it will not be run again.
