@@ -1,0 +1,93 @@
+#!/bin/bash
+
+usage()
+{
+cat << EOF
+Usage: $0 [options]
+
+MySQL Migrations
+
+OPTIONS:
+   -h      Show this message
+   -c      Configuration file (Defaults to ./my.cnf)
+   -m      Migrations directory (Defaults to ./migrations)
+   -o      Output file
+EOF
+}
+
+CONF=my.cnf
+DIR=migrations
+OUT=migrations.sql
+BIN=$( dirname "${BASH_SOURCE[0]}" )
+
+while getopts "h:c:m:o" OPTION
+do
+  case $OPTION in
+    h)
+      usage
+      exit 1
+      ;;
+    c)
+      CONF=$OPTARG  
+      ;;
+    m)
+      DIR=$OPTARG
+      ;;
+    o)
+      OUT=$OPTARG
+      ;;
+   ?)
+     usage
+     exit
+     ;;
+   esac
+done
+
+## Ensure empty file
+if [ -f $OUT ]
+then
+  rm $OUT
+fi
+touch $OUT
+
+## Ensure changelog table exists
+mysql --defaults-file=$CONF < $BIN/schema.sql
+if [ $? -ne 0 ]; then
+    echo "Unable to create schema"
+    exit 1
+fi
+
+## Get deltas
+MIGRATIONS=$(comm -13 <(mysql --defaults-file=$CONF -N -e 'SELECT id FROM mysqlmigrate' | sort ) <(ls $DIR/*.sql | xargs -n1 basename | sort ))
+
+## Natural sort
+MIGRATIONS=$( echo ${MIGRATIONS[@]} | awk 'BEGIN{RS=" ";} {print $1}' | sort -n )
+
+## Build migration
+if [ -z "$MIGRATIONS" ]; then
+    echo "No Pending Migrations"
+    exit 0
+fi
+
+echo "Migrations: "
+for i in $MIGRATIONS
+do
+    echo "\t$i"
+    echo "/* $i */" >> $OUT
+    echo "START TRANSACTION;" >> $OUT
+    cat "$DIR/$i" >> $OUT
+    echo "INSERT INTO mysqlmigrate VALUES ('$i');" >> $OUT
+    echo "COMMIT;" >> $OUT
+    echo "" >> $OUT
+done
+echo ""
+
+## Execute migration
+echo -n "Executing Migrations: "
+mysql --defaults-file=$CONF < $OUT
+if [ $? -eq 0 ];
+then
+    echo "[OK]"
+else
+    echo "[FAIL]"
+fi
